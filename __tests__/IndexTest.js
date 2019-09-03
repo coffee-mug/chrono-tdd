@@ -72,21 +72,44 @@ test('on pause, pause button has label "Restart"', () => {
   const pauseButton = container.querySelector('button.pause');
 
   act(() => {
-    //pauseButton.dispatchEvent(new MouseEvent('click'), { bubbles: true });
     pauseButton.click();
   })
 
   expect(container.querySelector('button.pause').textContent).toEqual("Restart"); 
 })
 
-test('Click on restart resets the chrono', () => {
+test('when paused, clicking on restart starts the chrono again', () => {
+  act(() => {
+    render(<ChronoComponent />, container);
+  })
+
+  act(() => {
+    jest.advanceTimersByTime(1000);
+  })
+
+  const pauseButton = container.querySelector('button.pause');
+
+  // Pausing the chrono after 1 second
+  act(() => {
+    pauseButton.click();
+  })
+
+  // Restarting
+  act(() => {
+    pauseButton.click();
+  })
+
+  assertSecondsDisplayedAfter(1000, 2, container.querySelector("div.chrono"))
+})
+
+test('Click on reset button resets the chrono', () => {
   act(() => {
     render(<ChronoComponent />, container);
   })
 
   assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono"))
 
-  const restartButton = container.querySelector('button.restart');
+  const restartButton = container.querySelector('button.reset');
 
   act(() => {
     restartButton.click();

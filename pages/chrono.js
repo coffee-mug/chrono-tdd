@@ -10,8 +10,13 @@ function ChronoComponent() {
         setCount(count + 1);
     }, delay);
 
+    // pause pauses the chrono
     function pause() {
-        setDelay(null);
+        if (isPaused) {
+            setDelay(1000);
+        } else {
+            setDelay(null);
+        }
         setPaused(!isPaused);
     }
 
@@ -23,7 +28,7 @@ function ChronoComponent() {
         <div>
             <div className="chrono">{count}</div>
             <button onClick={pause} className="pause">{ isPaused ? 'Restart' : 'Pause' }</button>
-            <button onClick={restart} className="restart"></button>
+            <button onClick={restart} className="reset">Reset</button>
         </div>
     )
 }
