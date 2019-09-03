@@ -20,7 +20,7 @@ function useInterval(callback, delay) {
             clearInterval(id);
         }
       }
-    }, []);
+    }, [delay]);
 }
 
 export default useInterval;

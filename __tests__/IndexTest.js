@@ -57,8 +57,40 @@ test('Click on pause stops the chrono', () => {
   const pauseButton = container.querySelector('button.pause');
 
   act(() => {
-    pauseButton.dispatchEvent(new MouseEvent('click'), { bubbles: true });
+    //pauseButton.dispatchEvent(new MouseEvent('click'), { bubbles: true });
+    pauseButton.click();
   })
 
   assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono"))
+})
+
+test('on pause, pause button has label "Restart"', () => {
+  act(() => {
+    render(<ChronoComponent />, container);
+  })
+
+  const pauseButton = container.querySelector('button.pause');
+
+  act(() => {
+    //pauseButton.dispatchEvent(new MouseEvent('click'), { bubbles: true });
+    pauseButton.click();
+  })
+
+  expect(container.querySelector('button.pause').textContent).toEqual("Restart"); 
+})
+
+test('Click on restart resets the chrono', () => {
+  act(() => {
+    render(<ChronoComponent />, container);
+  })
+
+  assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono"))
+
+  const restartButton = container.querySelector('button.restart');
+
+  act(() => {
+    restartButton.click();
+  })
+
+  expect(container.querySelector('div.chrono').textContent).toEqual("0"); 
 })
