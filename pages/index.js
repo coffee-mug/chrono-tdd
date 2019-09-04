@@ -1,12 +1,14 @@
-import React from 'react';
-import ChronoComponent from '../components/Chrono'
+import React, { useState, useEffect } from 'react';
+import { ChronoListComponent } from '../components/Chrono'
 
-function Index() {
+function IndexComponent() {
+    const [count, setCount] = useState(0);
+
     return (
         <div>
-            <ChronoComponent />
+            <ChronoListComponent chronos={[]}/>
         </div>
     )
 }
 
-export default Index;
+export default IndexComponent

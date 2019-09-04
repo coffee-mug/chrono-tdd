@@ -131,3 +131,20 @@ test('Can render a list of chronos', () => {
 
   expect(container.querySelectorAll('.chrono').length).toEqual(3);
 })
+
+test('Can add a chrono to the list by clicking the add button', () => {
+  act(() => {
+    render(<ChronoListComponent chronos={[]}/>, container);
+  })
+
+  // Empty list at startup
+  expect(container.querySelectorAll('.chrono').length).toEqual(0);
+
+  const addButton = container.querySelector('button.chronoList-add');
+
+  act(() => {
+    addButton.click();
+  })
+
+  expect(container.querySelectorAll('.chrono').length).toEqual(1);
+})

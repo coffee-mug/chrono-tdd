@@ -34,20 +34,29 @@ function ChronoComponent() {
 }
 
 function ChronoListComponent(props) {
-  const { chronos }  = props;
+  const [chronos, setChronos] = useState(props.chronos);
+
   const chronoItems = chronos.map((c, index) => {
     return (
       <li key={index}>{c}</li>
     )
   })
+
+  function add() {
+    setChronos([...chronos, <ChronoComponent/>])
+  }
+
   return (
-    <ul>
-      {chronoItems} 
-    </ul>
+    <div>
+      <button onClick={add} className="chronoList-add">Add chrono</button>
+      <ul>
+        {chronoItems} 
+      </ul>
+    </div>
   )
 }
 
-module.exports = {
+export {
   ChronoComponent,
   ChronoListComponent,
 }
