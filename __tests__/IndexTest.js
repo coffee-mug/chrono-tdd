@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { act } from 'react-dom/test-utils';
-import ChronoComponent from '../components/Chrono';
+import { ChronoComponent, ChronoListComponent } from '../components/Chrono';
 
 jest.useFakeTimers();
 
@@ -116,4 +116,18 @@ test('Click on reset button resets the chrono', () => {
   })
 
   expect(container.querySelector('div.chrono').textContent).toEqual("0"); 
+})
+
+test('Can render a list of chronos', () => {
+  const chronos = [
+    <ChronoComponent />, 
+    <ChronoComponent />, 
+    <ChronoComponent />
+  ];
+
+  act(() => {
+    render(<ChronoListComponent chronos={chronos}/>, container);
+  })
+
+  expect(container.querySelectorAll('.chrono').length).toEqual(3);
 })

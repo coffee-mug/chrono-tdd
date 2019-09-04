@@ -33,4 +33,21 @@ function ChronoComponent() {
     )
 }
 
-export default ChronoComponent;
+function ChronoListComponent(props) {
+  const { chronos }  = props;
+  const chronoItems = chronos.map((c, index) => {
+    return (
+      <li key={index}>{c}</li>
+    )
+  })
+  return (
+    <ul>
+      {chronoItems} 
+    </ul>
+  )
+}
+
+module.exports = {
+  ChronoComponent,
+  ChronoListComponent,
+}
