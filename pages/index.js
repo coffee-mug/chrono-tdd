@@ -1,36 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import useInterval from "../hooks/userInterval";
+import React from 'react';
+import ChronoComponent from '../components/Chrono'
 
-function ChronoComponent() {
-    const [count, setCount] = useState(0);
-    const [delay, setDelay] = useState(1000);
-    const [isPaused, setPaused] = useState(false);
-
-    useInterval(() => {
-        setCount(count + 1);
-    }, delay);
-
-    // pause pauses the chrono
-    function pause() {
-        if (isPaused) {
-            setDelay(1000);
-        } else {
-            setDelay(null);
-        }
-        setPaused(!isPaused);
-    }
-
-    function restart() {
-        setCount(0);
-    }
-
+function Index() {
     return (
         <div>
-            <div className="chrono">{count}</div>
-            <button onClick={pause} className="pause">{ isPaused ? 'Restart' : 'Pause' }</button>
-            <button onClick={restart} className="reset">Reset</button>
+            <ChronoComponent />
         </div>
     )
 }
 
-export default ChronoComponent;
+export default Index;
