@@ -36,14 +36,26 @@ function ChronoComponent() {
 function ChronoListComponent(props) {
   const [chronos, setChronos] = useState(props.chronos);
 
-  const chronoItems = chronos.map((c, index) => {
+  const chronoItems = chronos.map(c => {
     return (
-      <li key={index}>{c}</li>
+      <li key={c.id}><ChronoComponent /> - <button onClick={() => remove(c.id)}className="chronoList-remove">Remove</button></li>
     )
   })
 
+
   function add() {
-    setChronos([...chronos, <ChronoComponent/>])
+    const newId = String(Math.random() * 1E6).split('.').join('-');
+    setChronos([...chronos, { id: newId }])
+  }
+
+  function remove(id) {
+    setChronos(() => {
+      return chronos.filter(c => {
+        if (c.id !== id) { 
+          return c 
+        }
+      })
+    });
   }
 
   return (

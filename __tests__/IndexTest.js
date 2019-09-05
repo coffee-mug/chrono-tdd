@@ -120,9 +120,9 @@ test('Click on reset button resets the chrono', () => {
 
 test('Can render a list of chronos', () => {
   const chronos = [
-    <ChronoComponent />, 
-    <ChronoComponent />, 
-    <ChronoComponent />
+    { id: "0X56435678"},
+    { id: "0X56436789"},
+    { id: "0X56437890"},
   ];
 
   act(() => {
@@ -148,3 +148,41 @@ test('Can add a chrono to the list by clicking the add button', () => {
 
   expect(container.querySelectorAll('.chrono').length).toEqual(1);
 })
+
+test('Can remove a chrono from the list by clicking its remove button', () => {
+  act(() => {
+    render(<ChronoListComponent chronos={[<ChronoComponent />]}/>, container);
+  })
+
+  // advance to create a differentiation between timers
+  act(() => {
+    jest.advanceTimersByTime(10000);
+  })
+
+
+  const addButton = container.querySelector('button.chronoList-add');
+  act(() => {
+    addButton.click();
+  })
+
+  act(() => {
+    jest.advanceTimersByTime(5000);
+  })
+
+  act(() => {
+    addButton.click();
+  })
+
+  // Remove second chrono, to test that the two other items
+  // keep their state
+  const secondElemRemoveButton = container.querySelector('li:nth-child(2) button.chronoList-remove');
+  act(() => {
+    secondElemRemoveButton.click();
+  })
+  
+  const chronos = container.querySelectorAll('.chrono');
+  expect(chronos.length).toEqual(2);
+  expect(chronos[0].textContent).toEqual("15");
+  expect(chronos[1].textContent).toEqual("0");
+
+});
