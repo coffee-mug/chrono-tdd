@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import useInterval from "../hooks/userInterval";
 
-function ChronoComponent() {
+function ChronoComponent(props) {
     const [count, setCount] = useState(0);
     const [delay, setDelay] = useState(1000);
     const [isPaused, setPaused] = useState(false);
+    const { label } = props;
 
     useInterval(() => {
         setCount(count + 1);
@@ -26,7 +27,7 @@ function ChronoComponent() {
 
     return (
         <div>
-            <div className="chrono">{count}</div>
+          <div className="chrono"><span className="count">{count}</span> <span className="label" >{ label }</span></div>
             <button onClick={pause} className="pause">{ isPaused ? 'Restart' : 'Pause' }</button>
             <button onClick={restart} className="reset">Reset</button>
         </div>
@@ -38,14 +39,16 @@ function ChronoListComponent(props) {
 
   const chronoItems = chronos.map(c => {
     return (
-      <li key={c.id}><ChronoComponent /> - <button onClick={() => remove(c.id)}className="chronoList-remove">Remove</button></li>
+      <li key={c.id}>
+        <ChronoComponent label={c.label} />
+        <button onClick={() => remove(c.id)} className="chronoList-remove">Remove</button>
+      </li>
     )
   })
 
-
   function add() {
     const newId = String(Math.random() * 1E6).split('.').join('-');
-    setChronos([...chronos, { id: newId }])
+    setChronos([...chronos, { id: newId, label: "My Label" }])
   }
 
   function remove(id) {
@@ -60,6 +63,7 @@ function ChronoListComponent(props) {
 
   return (
     <div>
+      <input type="text" className="chronoLabel" />
       <button onClick={add} className="chronoList-add">Add chrono</button>
       <ul>
         {chronoItems} 

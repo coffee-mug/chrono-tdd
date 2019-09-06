@@ -36,8 +36,8 @@ test('Display count of seconds elapsed correctly',() => {
         render(<ChronoComponent />, container);
     })
 
-    timeElapsed = assertSecondsDisplayedAfter(4000, 4, container.querySelector('div.chrono'))
-    timeElapsed = assertSecondsDisplayedAfter(6000, (timeElapsed / 1000) + 6, container.querySelector('div.chrono'))
+    timeElapsed = assertSecondsDisplayedAfter(4000, 4, container.querySelector('div.chrono .count'))
+    timeElapsed = assertSecondsDisplayedAfter(6000, (timeElapsed / 1000) + 6, container.querySelector('div.chrono .count'))
 
 
 
@@ -61,7 +61,7 @@ test('Click on pause stops the chrono', () => {
     pauseButton.click();
   })
 
-  assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono"))
+  assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono .count"))
 })
 
 test('on pause, pause button has label "Restart"', () => {
@@ -99,7 +99,7 @@ test('when paused, clicking on restart starts the chrono again', () => {
     pauseButton.click();
   })
 
-  assertSecondsDisplayedAfter(1000, 2, container.querySelector("div.chrono"))
+  assertSecondsDisplayedAfter(1000, 2, container.querySelector("div.chrono .count"))
 })
 
 test('Click on reset button resets the chrono', () => {
@@ -107,7 +107,7 @@ test('Click on reset button resets the chrono', () => {
     render(<ChronoComponent />, container);
   })
 
-  assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono"))
+  assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono .count"))
 
   const restartButton = container.querySelector('button.reset');
 
@@ -115,7 +115,7 @@ test('Click on reset button resets the chrono', () => {
     restartButton.click();
   })
 
-  expect(container.querySelector('div.chrono').textContent).toEqual("0"); 
+  expect(container.querySelector('div.chrono .count').textContent).toEqual("0"); 
 })
 
 test('Can render a list of chronos', () => {
@@ -150,8 +150,12 @@ test('Can add a chrono to the list by clicking the add button', () => {
 })
 
 test('Can remove a chrono from the list by clicking its remove button', () => {
+  const chronos = [
+    { id: "0X56435678"},
+  ];
+
   act(() => {
-    render(<ChronoListComponent chronos={[<ChronoComponent />]}/>, container);
+    render(<ChronoListComponent chronos={chronos}/>, container);
   })
 
   // advance to create a differentiation between timers
@@ -180,9 +184,32 @@ test('Can remove a chrono from the list by clicking its remove button', () => {
     secondElemRemoveButton.click();
   })
   
-  const chronos = container.querySelectorAll('.chrono');
-  expect(chronos.length).toEqual(2);
-  expect(chronos[0].textContent).toEqual("15");
-  expect(chronos[1].textContent).toEqual("0");
+  const chronosOnPage = container.querySelectorAll('.chrono');
+  expect(chronosOnPage.length).toEqual(2);
+  expect(chronosOnPage[0].querySelector('.count').textContent).toEqual("15");
+  expect(chronosOnPage[1].querySelector('.count').textContent).toEqual("0");
 
 });
+
+test('Can create a chrono with a label', () => {
+  // Empty list at first
+  act(() => {
+    render(<ChronoListComponent chronos={[]}/>, container);
+  })
+
+  const addButton = container.querySelector('button.chronoList-add');
+  const labelField = container.querySelector('input.chronoLabel');
+
+  act(() => {
+    labelField.value = "My Label"
+  })
+
+  act(() => {
+    addButton.click();
+  })
+
+  const chronosOnPage = container.querySelectorAll('.chrono')
+
+  expect(chronosOnPage.length).toEqual(1);
+  expect(chronosOnPage[0].querySelector('.label').textContent.trim()).toEqual("My Label");
+})
