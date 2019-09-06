@@ -198,10 +198,10 @@ test('Can create a chrono with a label', () => {
   })
 
   const addButton = container.querySelector('button.chronoList-add');
-  const labelField = container.querySelector('input.chronoLabel');
+  const labelField = () => container.querySelector('input.chronoLabel');
 
   act(() => {
-    labelField.value = "My Label"
+    labelField().value = "My Label"
   })
 
   act(() => {
@@ -211,5 +211,6 @@ test('Can create a chrono with a label', () => {
   const chronosOnPage = container.querySelectorAll('.chrono')
 
   expect(chronosOnPage.length).toEqual(1);
-  expect(chronosOnPage[0].querySelector('.label').textContent.trim()).toEqual("My Label");
+  expect(chronosOnPage[0].querySelector('.label').textContent.trim()).not.toBeNull();
+  expect(chronosOnPage[0].querySelector('.label').textContent.trim()).toEqual(labelField().value.trim());
 })

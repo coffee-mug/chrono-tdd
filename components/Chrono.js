@@ -48,7 +48,9 @@ function ChronoListComponent(props) {
 
   function add() {
     const newId = String(Math.random() * 1E6).split('.').join('-');
-    setChronos([...chronos, { id: newId, label: "My Label" }])
+    const label = () => document.querySelector('.chronoLabel');
+
+    setChronos([...chronos, { id: newId, label: label().value.trim() }])
   }
 
   function remove(id) {
