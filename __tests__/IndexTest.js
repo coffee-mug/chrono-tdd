@@ -7,6 +7,17 @@ jest.useFakeTimers();
 
 let container = null;
 
+const MINUTE = 60000;
+const SECOND = 1000;
+const ADD_BUTTON = 'button.chronoList-add';
+const PAUSE_BUTTON = 'button.pause';
+const RESTART_BUTTON = 'button.restart';
+const RESET_BUTTON = 'button.reset';
+const CHRONO_ITEM = '.chrono';
+const CHRONO_COUNT = '.chrono .count'
+const CHRONO_INPUT_LABEL = 'input.chronoLabel'
+const CHRONO_LABEL = '.label'
+
 beforeEach(() => {
   // setup a DOM element as a render target
   container = document.createElement("div");
@@ -20,13 +31,25 @@ afterEach(() => {
   container = null;
 });
 
-function assertSecondsDisplayedAfter(time, elapsed, domElement) {
-    act(() => {
-        jest.advanceTimersByTime(time);
-    })
 
-    expect(domElement.textContent).toEqual(String(elapsed)); 
-    return time;
+// Utils
+function clickButton(btnSel) {
+  const btn = container.querySelector(btnSel)
+
+  act(() => {
+    btn.click();
+  })
+}
+
+function wait(duration) {
+  act(() => {
+    jest.advanceTimersByTime(duration);
+  })
+}
+
+
+function assertSecondsDisplayed(domElement, elapsed) {
+    return expect(domElement.textContent).toEqual(elapsed + "s"); 
 }
 
 test('Display count of seconds elapsed correctly',() => {
@@ -36,10 +59,11 @@ test('Display count of seconds elapsed correctly',() => {
         render(<ChronoComponent />, container);
     })
 
-    timeElapsed = assertSecondsDisplayedAfter(4000, 4, container.querySelector('div.chrono .count'))
-    timeElapsed = assertSecondsDisplayedAfter(6000, (timeElapsed / 1000) + 6, container.querySelector('div.chrono .count'))
+    wait(4 * SECOND);
+    assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 4)
 
-
+    wait(6 * SECOND);
+    assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 10)
 
     expect(setInterval).toHaveBeenCalledTimes(1);
     expect(setInterval).toHaveBeenLastCalledWith(expect.any(Function), 1000);
@@ -50,18 +74,11 @@ test('Click on pause stops the chrono', () => {
     render(<ChronoComponent />, container);
   })
 
-  act(() => {
-    jest.advanceTimersByTime(1000);
-  })
+  wait(1* SECOND)
 
-  const pauseButton = container.querySelector('button.pause');
+  clickButton(PAUSE_BUTTON)
 
-  act(() => {
-    //pauseButton.dispatchEvent(new MouseEvent('click'), { bubbles: true });
-    pauseButton.click();
-  })
-
-  assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono .count"))
+  assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 1)
 })
 
 test('on pause, pause button has label "Restart"', () => {
@@ -69,13 +86,9 @@ test('on pause, pause button has label "Restart"', () => {
     render(<ChronoComponent />, container);
   })
 
-  const pauseButton = container.querySelector('button.pause');
+  clickButton(PAUSE_BUTTON)
 
-  act(() => {
-    pauseButton.click();
-  })
-
-  expect(container.querySelector('button.pause').textContent).toEqual("Restart"); 
+  expect(container.querySelector(PAUSE_BUTTON).textContent).toEqual("Restart"); 
 })
 
 test('when paused, clicking on restart starts the chrono again', () => {
@@ -83,23 +96,17 @@ test('when paused, clicking on restart starts the chrono again', () => {
     render(<ChronoComponent />, container);
   })
 
-  act(() => {
-    jest.advanceTimersByTime(1000);
-  })
-
-  const pauseButton = container.querySelector('button.pause');
+  wait(1 * SECOND);
 
   // Pausing the chrono after 1 second
-  act(() => {
-    pauseButton.click();
-  })
+  clickButton(PAUSE_BUTTON)
 
   // Restarting
-  act(() => {
-    pauseButton.click();
-  })
+  clickButton(PAUSE_BUTTON)
 
-  assertSecondsDisplayedAfter(1000, 2, container.querySelector("div.chrono .count"))
+  wait(1 * SECOND);
+
+  assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 2)
 })
 
 test('Click on reset button resets the chrono', () => {
@@ -107,15 +114,13 @@ test('Click on reset button resets the chrono', () => {
     render(<ChronoComponent />, container);
   })
 
-  assertSecondsDisplayedAfter(1000, 1, container.querySelector("div.chrono .count"))
+  wait(1 * SECOND);
 
-  const restartButton = container.querySelector('button.reset');
+  assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 1)
 
-  act(() => {
-    restartButton.click();
-  })
+  clickButton(RESET_BUTTON)
 
-  expect(container.querySelector('div.chrono .count').textContent).toEqual("0"); 
+  assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 0)
 })
 
 test('Can render a list of chronos', () => {
@@ -129,7 +134,7 @@ test('Can render a list of chronos', () => {
     render(<ChronoListComponent chronos={chronos}/>, container);
   })
 
-  expect(container.querySelectorAll('.chrono').length).toEqual(3);
+  expect(container.querySelectorAll(CHRONO_ITEM).length).toEqual(3);
 })
 
 test('Can add a chrono to the list by clicking the add button', () => {
@@ -138,15 +143,11 @@ test('Can add a chrono to the list by clicking the add button', () => {
   })
 
   // Empty list at startup
-  expect(container.querySelectorAll('.chrono').length).toEqual(0);
+  expect(container.querySelectorAll(CHRONO_ITEM).length).toEqual(0);
 
-  const addButton = container.querySelector('button.chronoList-add');
+  clickButton(ADD_BUTTON)
 
-  act(() => {
-    addButton.click();
-  })
-
-  expect(container.querySelectorAll('.chrono').length).toEqual(1);
+  expect(container.querySelectorAll(CHRONO_ITEM).length).toEqual(1);
 })
 
 test('Can remove a chrono from the list by clicking its remove button', () => {
@@ -159,35 +160,23 @@ test('Can remove a chrono from the list by clicking its remove button', () => {
   })
 
   // advance to create a differentiation between timers
-  act(() => {
-    jest.advanceTimersByTime(10000);
-  })
+  wait(10 * SECOND);
 
+  clickButton(ADD_BUTTON);
 
-  const addButton = container.querySelector('button.chronoList-add');
-  act(() => {
-    addButton.click();
-  })
+  wait(5 * SECOND);
 
-  act(() => {
-    jest.advanceTimersByTime(5000);
-  })
-
-  act(() => {
-    addButton.click();
-  })
+  clickButton(ADD_BUTTON);
 
   // Remove second chrono, to test that the two other items
   // keep their state
-  const secondElemRemoveButton = container.querySelector('li:nth-child(2) button.chronoList-remove');
-  act(() => {
-    secondElemRemoveButton.click();
-  })
+  const REMOVE_SECOND_CHRONO_BUTTON = 'li:nth-child(2) button.chronoList-remove'
+  clickButton(REMOVE_SECOND_CHRONO_BUTTON)
   
-  const chronosOnPage = container.querySelectorAll('.chrono');
+  const chronosOnPage = container.querySelectorAll(CHRONO_ITEM);
   expect(chronosOnPage.length).toEqual(2);
-  expect(chronosOnPage[0].querySelector('.count').textContent).toEqual("15");
-  expect(chronosOnPage[1].querySelector('.count').textContent).toEqual("0");
+  expect(chronosOnPage[0].querySelector(CHRONO_COUNT).textContent).toEqual("15s");
+  expect(chronosOnPage[1].querySelector(CHRONO_COUNT).textContent).toEqual("0s");
 
 });
 
@@ -197,20 +186,31 @@ test('Can create a chrono with a label', () => {
     render(<ChronoListComponent chronos={[]}/>, container);
   })
 
-  const addButton = container.querySelector('button.chronoList-add');
-  const labelField = () => container.querySelector('input.chronoLabel');
+  const labelField = () => container.querySelector(CHRONO_INPUT_LABEL);
 
   act(() => {
     labelField().value = "My Label"
   })
 
-  act(() => {
-    addButton.click();
-  })
+  clickButton(ADD_BUTTON);
 
-  const chronosOnPage = container.querySelectorAll('.chrono')
+  const chronosOnPage = container.querySelectorAll(CHRONO_ITEM)
 
   expect(chronosOnPage.length).toEqual(1);
-  expect(chronosOnPage[0].querySelector('.label').textContent.trim()).not.toBeNull();
-  expect(chronosOnPage[0].querySelector('.label').textContent.trim()).toEqual(labelField().value.trim());
+  expect(chronosOnPage[0].querySelector(CHRONO_LABEL).textContent.trim()).not.toBeNull();
+  expect(chronosOnPage[0].querySelector(CHRONO_LABEL).textContent.trim()).toEqual(labelField().value.trim());
+})
+
+test('Display minutes elapsed', () => {
+  // Empty list at first
+  act(() => {
+    render(<ChronoListComponent chronos={[]}/>, container);
+  })
+
+  clickButton(ADD_BUTTON);
+
+  wait(1 * MINUTE + 30 * SECOND)
+
+  const chrono = container.querySelector(CHRONO_ITEM);
+  expect(chrono.querySelector(CHRONO_COUNT).textContent).toEqual("01m 30s");
 })

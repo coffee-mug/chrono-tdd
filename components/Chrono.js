@@ -25,9 +25,29 @@ function ChronoComponent(props) {
         setCount(0);
     }
 
+    function renderTime() {
+      const minutes = Math.floor(count / 60);
+      const seconds = count % 60;
+      let timeElapsed;
+
+      switch(true) {
+        case minutes < 1:
+          timeElapsed = `${seconds}s`
+          break;
+        case minutes < 10:
+          timeElapsed = `0${minutes}m ${seconds}s`
+          break;
+        case minutes > 10:
+          timeElapsed = `${minutes}m ${seconds}s`
+          break;
+      }
+
+      return timeElapsed;
+    }
+
     return (
         <div>
-          <div className="chrono"><span className="count">{count}</span> <span className="label" >{ label }</span></div>
+          <div className="chrono"><span className="count">{renderTime()}</span> <span className="label" >{ label }</span></div>
             <button onClick={pause} className="pause">{ isPaused ? 'Restart' : 'Pause' }</button>
             <button onClick={restart} className="reset">Reset</button>
         </div>
