@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import useInterval from "../hooks/userInterval";
 
 function ChronoComponent(props) {
-    const [count, setCount] = useState(0);
     const [delay, setDelay] = useState(1000);
     const [isPaused, setPaused] = useState(false);
+    const [pauseDuration, setPauseDuration] = useState(0);
+    const timerStarted = useRef(new Date(Date.now()));
+
+    // When coming back on the page after sleep, 
+    // this allows to readjust the count to the real 
+    // difference in time elapsed.
+    const now = Date.now()
+    const elapsedMs = now - timerStarted.current - pauseDuration;
+    const elapsedSec = Math.floor(elapsedMs / 1000)
+
+    const [count, setCount] = useState(elapsedSec);
     const { label } = props;
 
     useInterval(() => {
-        setCount(count + 1);
+        if (!isPaused) {
+          setCount((ount) => count + 1);
+        }
     }, delay);
 
     // pause pauses the chrono
@@ -16,13 +28,15 @@ function ChronoComponent(props) {
         if (isPaused) {
             setDelay(1000);
         } else {
-            setDelay(null);
+            // Keep track of time elapsed during pause
+            setPauseDuration(pauseDuration + 1);
         }
         setPaused(!isPaused);
     }
 
     function restart() {
-        setCount(0);
+      timerStarted.current = Date.now();
+      setCount(0);
     }
 
     function renderTime() {

@@ -3,8 +3,6 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import { ChronoComponent, ChronoListComponent } from '../components/Chrono';
 
-jest.useFakeTimers();
-
 let container = null;
 
 const MINUTE = 60000;
@@ -17,6 +15,9 @@ const CHRONO_ITEM = '.chrono';
 const CHRONO_COUNT = '.chrono .count'
 const CHRONO_INPUT_LABEL = 'input.chronoLabel'
 const CHRONO_LABEL = '.label'
+
+
+jest.useFakeTimers();
 
 beforeEach(() => {
   // setup a DOM element as a render target
@@ -43,6 +44,7 @@ function clickButton(btnSel) {
 
 function wait(duration) {
   act(() => {
+    // To update the interval
     jest.advanceTimersByTime(duration);
   })
 }
@@ -65,8 +67,8 @@ test('Display count of seconds elapsed correctly',() => {
     wait(6 * SECOND);
     assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 10)
 
-    expect(setInterval).toHaveBeenCalledTimes(1);
     expect(setInterval).toHaveBeenLastCalledWith(expect.any(Function), 1000);
+    expect(setInterval).toHaveBeenCalledTimes(1);
 })
 
 test('Click on pause stops the chrono', () => {
