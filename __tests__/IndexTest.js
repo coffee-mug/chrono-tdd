@@ -16,7 +16,6 @@ const CHRONO_COUNT = '.chrono .count'
 const CHRONO_INPUT_LABEL = 'input.chronoLabel'
 const CHRONO_LABEL = '.label'
 
-
 jest.useFakeTimers();
 
 beforeEach(() => {
@@ -30,6 +29,8 @@ afterEach(() => {
   unmountComponentAtNode(container);
   container.remove();
   container = null;
+
+  localStorage.clear();
 });
 
 
@@ -215,4 +216,30 @@ test('Display minutes elapsed', () => {
 
   const chrono = container.querySelector(CHRONO_ITEM);
   expect(chrono.querySelector(CHRONO_COUNT).textContent).toEqual("01m 30s");
+})
+
+test('Chrono starting times persists after render', () => {
+  act(() => {
+    render(<ChronoListComponent chronos={[]}/>, container);
+  })
+
+  // THe component use Date.now(), so mock it to allow
+  // assertions  
+  // For an unknown reason there seems to have a 1ms latency
+  // between the date and the moment it gets saved in localStorage.
+  const timeNow = () => Date.now();
+  const now = timeNow();
+
+  jest
+    .spyOn(global.Date, 'now')
+    .mockImplementationOnce(() => now)
+
+  clickButton(ADD_BUTTON);
+
+  const chronoId = Object.keys(localStorage.__STORE__)[0];
+
+  expect(Object.keys(localStorage.__STORE__).length).toBe(1);
+  expect(+localStorage.getItem(chronoId)).toEqual(+now + 1);
+
+
 })

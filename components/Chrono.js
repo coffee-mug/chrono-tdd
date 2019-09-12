@@ -1,25 +1,32 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useInterval from "../hooks/userInterval";
 
 function ChronoComponent(props) {
     const [delay, setDelay] = useState(1000);
     const [isPaused, setPaused] = useState(false);
     const [pauseDuration, setPauseDuration] = useState(0);
-    const timerStarted = useRef(new Date(Date.now()));
+    const [count, setCount] = useState(0);
+    let timerStarted = useRef(localStorage.getItem(props.id) || Date.now());
+    const { label } = props;
 
-    // When coming back on the page after sleep, 
+    // When coming back on the page after mobile standby, 
     // this allows to readjust the count to the real 
     // difference in time elapsed.
-    const now = Date.now()
-    const elapsedMs = now - timerStarted.current - pauseDuration;
-    const elapsedSec = Math.floor(elapsedMs / 1000)
+    localStorage.setItem(props.id, timerStarted.current)
 
-    const [count, setCount] = useState(elapsedSec);
-    const { label } = props;
+    useEffect(() => {
+      const now = Date.now()
+
+      const elapsedMs = now - timerStarted.current - pauseDuration;
+      const elapsedSec = Math.floor(elapsedMs / 1000)
+
+      setCount(elapsedSec);
+    }, []);
+
 
     useInterval(() => {
         if (!isPaused) {
-          setCount((ount) => count + 1);
+          setCount((count) => count + 1);
         }
     }, delay);
 
@@ -36,6 +43,8 @@ function ChronoComponent(props) {
 
     function restart() {
       timerStarted.current = Date.now();
+
+      localStorage.setItem(props.id, timerStarted.current)
       setCount(0);
     }
 
@@ -74,7 +83,7 @@ function ChronoListComponent(props) {
   const chronoItems = chronos.map(c => {
     return (
       <li key={c.id}>
-        <ChronoComponent label={c.label} />
+        <ChronoComponent id={c.id} label={c.label} />
         <button onClick={() => remove(c.id)} className="chronoList-remove">Remove</button>
       </li>
     )
@@ -85,6 +94,7 @@ function ChronoListComponent(props) {
     const label = () => document.querySelector('.chronoLabel');
 
     setChronos([...chronos, { id: newId, label: label().value.trim() }])
+    return newId;
   }
 
   function remove(id) {
