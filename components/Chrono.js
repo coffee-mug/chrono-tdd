@@ -15,12 +15,24 @@ function ChronoComponent(props) {
     localStorage.setItem(props.id, timerStarted.current)
 
     useEffect(() => {
-      const now = Date.now()
+      const id = document.addEventListener('visibilitychange', () => {
 
-      const elapsedMs = now - timerStarted.current - pauseDuration;
-      const elapsedSec = Math.floor(elapsedMs / 1000)
+        if (!document.hidden) {
+          console.log(`User entered, refresh timers, original count ${count}`)
 
-      setCount(elapsedSec);
+          const now = Date.now()
+
+          const elapsedMs = now - timerStarted.current - pauseDuration;
+          const elapsedSec = Math.floor(elapsedMs / 1000)
+
+          setCount(elapsedSec);
+
+          console.log(`Updated count: ${elapsedSec}`)
+        }
+        return function() {
+          document.removeEventListener(id);
+        }
+      })
     }, []);
 
 

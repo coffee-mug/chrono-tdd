@@ -218,28 +218,38 @@ test('Display minutes elapsed', () => {
   expect(chrono.querySelector(CHRONO_COUNT).textContent).toEqual("01m 30s");
 })
 
-test('Chrono starting times persists after render', () => {
+test('Chrono starting times persists after unmount', () => {
   act(() => {
     render(<ChronoListComponent chronos={[]}/>, container);
   })
 
-  // THe component use Date.now(), so mock it to allow
+  // The component use Date.now(), so mock it to allow
   // assertions  
   // For an unknown reason there seems to have a 1ms latency
   // between the date and the moment it gets saved in localStorage.
-  const timeNow = () => Date.now();
-  const now = timeNow();
-
+  const now = 1568377542026
   jest
     .spyOn(global.Date, 'now')
     .mockImplementationOnce(() => now)
+  
 
+  const buttonAddedAt = Date.now();
   clickButton(ADD_BUTTON);
 
+  const chrono = container.querySelector(CHRONO_ITEM);
   const chronoId = Object.keys(localStorage.__STORE__)[0];
 
   expect(Object.keys(localStorage.__STORE__).length).toBe(1);
-  expect(+localStorage.getItem(chronoId)).toEqual(+now + 1);
+  expect(+localStorage.getItem(chronoId)).toBeGreaterThanOrEqual(buttonAddedAt);
+  // 10 ms aproximation
+  expect(+localStorage.getItem(chronoId)).toBeLessThanOrEqual(buttonAddedAt + 10);
 
+  // Should unmount the component, rerender the component
+  // with the previous id and see if the time displayed is right.
+  unmountComponentAtNode(container);
 
+  expect(Object.keys(localStorage.__STORE__).length).toBe(1);
+  expect(+localStorage.getItem(chronoId)).toBeGreaterThanOrEqual(buttonAddedAt);
+  // 10 ms aproximation
+  expect(+localStorage.getItem(chronoId)).toBeLessThanOrEqual(buttonAddedAt + 10);
 })
