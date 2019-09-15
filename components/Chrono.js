@@ -3,31 +3,23 @@ import useInterval from "../hooks/userInterval";
 
 function ChronoComponent(props) {
     const [delay, setDelay] = useState(1000);
-    const [isPaused, setPaused] = useState(false);
+    const [isPaused, setPaused] = useState(props.isPaused || false);
     const [pauseDuration, setPauseDuration] = useState(0);
     const [count, setCount] = useState(0);
-    let timerStarted = useRef(localStorage.getItem(props.id) || Date.now());
-    const { label } = props;
+    let timerStarted = useRef(props.started || Date.now());
+    const label = props.label || '';
 
-    // When coming back on the page after mobile standby, 
-    // this allows to readjust the count to the real 
-    // difference in time elapsed.
-    localStorage.setItem(props.id, timerStarted.current)
+    // original refresh
+    useEffect( () => {
+      refreshTime();
+
+    }, [])
 
     useEffect(() => {
       const id = document.addEventListener('visibilitychange', () => {
 
         if (!document.hidden) {
-          console.log(`User entered, refresh timers, original count ${count}`)
-
-          const now = Date.now()
-
-          const elapsedMs = now - timerStarted.current - pauseDuration;
-          const elapsedSec = Math.floor(elapsedMs / 1000)
-
-          setCount(elapsedSec);
-
-          console.log(`Updated count: ${elapsedSec}`)
+          refreshTime();
         }
         return function() {
           document.removeEventListener(id);
@@ -42,6 +34,15 @@ function ChronoComponent(props) {
         }
     }, delay);
 
+    function refreshTime() {
+      const now = Date.now()
+
+      const elapsedMs = now - timerStarted.current - pauseDuration;
+      const elapsedSec = Math.floor(elapsedMs / 1000)
+
+      setCount(elapsedSec);
+    }
+
     // pause pauses the chrono
     function pause() {
         if (isPaused) {
@@ -51,12 +52,31 @@ function ChronoComponent(props) {
             setPauseDuration(pauseDuration + 1);
         }
         setPaused(!isPaused);
+
+        const existingChronos = localStorage.getItem('chronos') || "[]"
+
+        const updatedChronos = JSON.parse(existingChronos).filter( c => {
+          if (c.id === props.id) {
+            c.state.isPaused = isPaused;
+          }
+        })
+
+        localStorage.setItem('chronos', JSON.stringify(updatedChronos));
     }
 
     function restart() {
       timerStarted.current = Date.now();
 
-      localStorage.setItem(props.id, timerStarted.current)
+      const existingChronos = localStorage.getItem('chronos') || "[]"
+
+      const updatedChronos = JSON.parse(existingChronos).filter( c => {
+        if (c.id === props.id) {
+          c.state.started = timerStarted.current;
+        }
+      })
+
+      localStorage.setItem('chronos', JSON.stringify(updatedChronos));
+
       setCount(0);
     }
 
@@ -92,32 +112,53 @@ function ChronoComponent(props) {
 function ChronoListComponent(props) {
   const [chronos, setChronos] = useState(props.chronos);
 
-  const chronoItems = chronos.map(c => {
-    return (
-      <li key={c.id}>
-        <ChronoComponent id={c.id} label={c.label} />
-        <button onClick={() => remove(c.id)} className="chronoList-remove">Remove</button>
-      </li>
-    )
-  })
+  useEffect(() => {
+    const existingChronos = window.localStorage.getItem('chronos')
+    const parsedChronos = existingChronos ? JSON.parse(existingChronos) : [];
+
+    setChronos([...chronos, ...parsedChronos ])
+  }, [])
+
 
   function add() {
     const newId = String(Math.random() * 1E6).split('.').join('-');
     const label = () => document.querySelector('.chronoLabel');
 
-    setChronos([...chronos, { id: newId, label: label().value.trim() }])
+    const chronoInfos = {
+      id: newId, 
+      state: {
+        isPaused: false,
+        started: Date.now(),
+        label: label().value.trim()
+      }
+    }
+
+    setChronos([...chronos, chronoInfos ])
+
+    localStorage.setItem('chronos', JSON.stringify([...chronos, chronoInfos]))
     return newId;
   }
 
   function remove(id) {
-    setChronos(() => {
-      return chronos.filter(c => {
+    const chronosMinusId = chronos.filter(c => {
         if (c.id !== id) { 
           return c 
         }
       })
-    });
+
+    setChronos(chronosMinusId);
+
+    localStorage.setItem('chronos', JSON.stringify(chronosMinusId))
   }
+
+  const chronoItems = chronos.map(c => {
+    return (
+      <li key={c.id}>
+        <ChronoComponent id={c.id} label={c.state.label} started={c.state.started} isPaused={c.state.isPaused} />
+        <button onClick={() => remove(c.id)} className="chronoList-remove">Remove</button>
+      </li>
+    )
+  })
 
   return (
     <div>

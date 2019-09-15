@@ -57,6 +57,7 @@ function assertSecondsDisplayed(domElement, elapsed) {
 
 test('Display count of seconds elapsed correctly',() => {
     let timeElapsed = 0;
+    localStorage.clear();
 
     act(() => {
         render(<ChronoComponent />, container);
@@ -128,9 +129,9 @@ test('Click on reset button resets the chrono', () => {
 
 test('Can render a list of chronos', () => {
   const chronos = [
-    { id: "0X56435678"},
-    { id: "0X56436789"},
-    { id: "0X56437890"},
+    { id: "0X56435678", state: { isPaused: false, label: '', started: 1568564128285 }},
+    { id: "0X56436678", state: { isPaused: false, label: '', started: 1568564128285 }},
+    { id: "0X56437678", state: { isPaused: false, label: '', started: 1568564128285 }},
   ];
 
   act(() => {
@@ -155,8 +156,10 @@ test('Can add a chrono to the list by clicking the add button', () => {
 
 test('Can remove a chrono from the list by clicking its remove button', () => {
   const chronos = [
-    { id: "0X56435678"},
+    { id: "0X56435678", state: { isPaused: false, label: '' }},
   ];
+
+  localStorage.clear();
 
   act(() => {
     render(<ChronoListComponent chronos={chronos}/>, container);
@@ -240,16 +243,39 @@ test('Chrono starting times persists after unmount', () => {
   const chronoId = Object.keys(localStorage.__STORE__)[0];
 
   expect(Object.keys(localStorage.__STORE__).length).toBe(1);
-  expect(+localStorage.getItem(chronoId)).toBeGreaterThanOrEqual(buttonAddedAt);
+  expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeGreaterThanOrEqual(buttonAddedAt);
   // 10 ms aproximation
-  expect(+localStorage.getItem(chronoId)).toBeLessThanOrEqual(buttonAddedAt + 10);
+  expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeLessThanOrEqual(buttonAddedAt + 10);
 
   // Should unmount the component, rerender the component
   // with the previous id and see if the time displayed is right.
   unmountComponentAtNode(container);
 
   expect(Object.keys(localStorage.__STORE__).length).toBe(1);
-  expect(+localStorage.getItem(chronoId)).toBeGreaterThanOrEqual(buttonAddedAt);
+  expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeGreaterThanOrEqual(buttonAddedAt);
   // 10 ms aproximation
-  expect(+localStorage.getItem(chronoId)).toBeLessThanOrEqual(buttonAddedAt + 10);
+  expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeLessThanOrEqual(buttonAddedAt + 10);
+})
+
+test('Correctly render time elapsed from previously saved chronos', () => {
+  // Chrono saved from a previous navigation
+  const previousDate = Date.now() - 10 * SECOND;
+
+  const savedChronos = localStorage.getItem('chronos') || "[]";
+  const parsedChronos = JSON.parse(savedChronos);
+
+  parsedChronos.push({ id: '15609098089-98080808987', state: { isPaused: false, started: previousDate, label: '' }})
+
+  localStorage.setItem('chronos', JSON.stringify(parsedChronos));
+
+  act(() => {
+    render(<ChronoListComponent chronos={[]}/>, container);
+  })
+
+  const chrono = container.querySelector(CHRONO_ITEM);
+
+  wait(10 * SECOND)
+
+  expect(chrono).not.toBe(null);
+  expect(chrono.querySelector(CHRONO_COUNT).textContent).toEqual("20s");
 })
