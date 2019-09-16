@@ -60,8 +60,10 @@ test('Display count of seconds elapsed correctly',() => {
     localStorage.clear();
 
     act(() => {
-        render(<ChronoComponent />, container);
+      render(<ChronoListComponent chronos={[]}/>, container);
     })
+
+    clickButton(ADD_BUTTON)
 
     wait(4 * SECOND);
     assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 4)
@@ -75,12 +77,23 @@ test('Display count of seconds elapsed correctly',() => {
 
 test('Click on pause stops the chrono', () => {
   act(() => {
-    render(<ChronoComponent />, container);
+    render(<ChronoListComponent chronos={[]}/>, container);
   })
 
+  clickButton(ADD_BUTTON)
+
   wait(1* SECOND)
+  console.log(localStorage.__STORE__)
 
   clickButton(PAUSE_BUTTON)
+  console.log(localStorage.__STORE__)
+
+  expect(Object.keys(localStorage.__STORE__).length).toBe(1);
+
+  // Saved in localStorage ? 
+  const savedChronos = localStorage.getItem('chronos') || "[]";
+  const parsedChronos = JSON.parse(savedChronos);
+  expect(parsedChronos[0].state.isPaused).toBe(true);
 
   assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 1)
 })
@@ -97,16 +110,28 @@ test('on pause, pause button has label "Restart"', () => {
 
 test('when paused, clicking on restart starts the chrono again', () => {
   act(() => {
-    render(<ChronoComponent />, container);
+    render(<ChronoListComponent chronos={[]}/>, container);
   })
+
+  clickButton(ADD_BUTTON);
 
   wait(1 * SECOND);
 
   // Pausing the chrono after 1 second
   clickButton(PAUSE_BUTTON)
 
+  let savedChronos = localStorage.getItem('chronos') || "[]";
+  let parsedChronos = JSON.parse(savedChronos);
+  expect(parsedChronos.length).toBe(1)
+  expect(parsedChronos[0].state.isPaused).toBe(true);
+
   // Restarting
   clickButton(PAUSE_BUTTON)
+
+  savedChronos = localStorage.getItem('chronos') || "[]";
+  parsedChronos = JSON.parse(savedChronos);
+  expect(parsedChronos.length).toBe(1)
+  expect(parsedChronos[0].state.isPaused).toBe(false);
 
   wait(1 * SECOND);
 
@@ -115,16 +140,29 @@ test('when paused, clicking on restart starts the chrono again', () => {
 
 test('Click on reset button resets the chrono', () => {
   act(() => {
-    render(<ChronoComponent />, container);
+    render(<ChronoListComponent chronos={[]}/>, container);
   })
+
+  clickButton(ADD_BUTTON);
 
   wait(1 * SECOND);
 
   assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 1)
 
   clickButton(RESET_BUTTON)
+  const timestampOnReset = Date.now();
 
   assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 0)
+
+  const savedChronos = localStorage.getItem('chronos') || "[]";
+  const parsedChronos = JSON.parse(savedChronos);
+
+  expect(parsedChronos.length).toBe(1)
+
+  // 10ms approximation
+  expect(parsedChronos[0].state.started).toBeGreaterThanOrEqual(timestampOnReset - 10)
+  expect(parsedChronos[0].state.started).toBeLessThanOrEqual(timestampOnReset + 10)
+
 })
 
 test('Can render a list of chronos', () => {
@@ -138,6 +176,10 @@ test('Can render a list of chronos', () => {
     render(<ChronoListComponent chronos={chronos}/>, container);
   })
 
+  // To refactor in its own assertChronoCount
+  expect(JSON.parse(localStorage.getItem('chronos')).length).toEqual(3);
+
+  // Displayed chronos
   expect(container.querySelectorAll(CHRONO_ITEM).length).toEqual(3);
 })
 
@@ -151,6 +193,8 @@ test('Can add a chrono to the list by clicking the add button', () => {
 
   clickButton(ADD_BUTTON)
 
+  // Saved to localStorage
+  expect(Object.keys(localStorage.__STORE__).length).toBe(1);
   expect(container.querySelectorAll(CHRONO_ITEM).length).toEqual(1);
 })
 
@@ -181,6 +225,9 @@ test('Can remove a chrono from the list by clicking its remove button', () => {
   
   const chronosOnPage = container.querySelectorAll(CHRONO_ITEM);
   expect(chronosOnPage.length).toEqual(2);
+
+  // also removed from localStorage
+  expect(JSON.parse(localStorage.getItem('chronos')).length).toEqual(2);
   expect(chronosOnPage[0].querySelector(CHRONO_COUNT).textContent).toEqual("15s");
   expect(chronosOnPage[1].querySelector(CHRONO_COUNT).textContent).toEqual("0s");
 
@@ -258,9 +305,9 @@ test('Chrono starting times persists after unmount', () => {
 })
 
 test('Correctly render time elapsed from previously saved chronos', () => {
-  // Chrono saved from a previous navigation
   const previousDate = Date.now() - 10 * SECOND;
 
+  // Chrono saved from a previous navigation
   const savedChronos = localStorage.getItem('chronos') || "[]";
   const parsedChronos = JSON.parse(savedChronos);
 

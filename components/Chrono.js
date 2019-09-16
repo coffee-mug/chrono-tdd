@@ -54,28 +54,38 @@ function ChronoComponent(props) {
         setPaused(!isPaused);
 
         const existingChronos = localStorage.getItem('chronos') || "[]"
+        const parsedChronos = JSON.parse(existingChronos);
 
-        const updatedChronos = JSON.parse(existingChronos).filter( c => {
-          if (c.id === props.id) {
-            c.state.isPaused = isPaused;
-          }
+        const thatChrono = parsedChronos.filter( c => {
+          // our chrono
+          return c.id === props.id;
         })
 
-        localStorage.setItem('chronos', JSON.stringify(updatedChronos));
+        // changing state
+        if (thatChrono.length === 1) {
+          thatChrono[0].state.isPaused = !isPaused;
+        }
+
+        localStorage.setItem('chronos', JSON.stringify(parsedChronos));
     }
 
     function restart() {
       timerStarted.current = Date.now();
 
       const existingChronos = localStorage.getItem('chronos') || "[]"
+      const parsedChronos = JSON.parse(existingChronos);
 
-      const updatedChronos = JSON.parse(existingChronos).filter( c => {
-        if (c.id === props.id) {
-          c.state.started = timerStarted.current;
-        }
+      const thatChrono = parsedChronos.filter( c => {
+        // our chrono
+        return c.id === props.id;
       })
 
-      localStorage.setItem('chronos', JSON.stringify(updatedChronos));
+      // changing state
+      if (thatChrono.length === 1) {
+        thatChrono[0].state.started = timerStarted.current;
+      }
+
+      localStorage.setItem('chronos', JSON.stringify(parsedChronos));
 
       setCount(0);
     }
@@ -117,6 +127,7 @@ function ChronoListComponent(props) {
     const parsedChronos = existingChronos ? JSON.parse(existingChronos) : [];
 
     setChronos([...chronos, ...parsedChronos ])
+    localStorage.setItem('chronos', JSON.stringify([...chronos, ...parsedChronos]))
   }, [])
 
 
@@ -133,9 +144,9 @@ function ChronoListComponent(props) {
       }
     }
 
+    localStorage.setItem('chronos', JSON.stringify([...chronos, chronoInfos]))
     setChronos([...chronos, chronoInfos ])
 
-    localStorage.setItem('chronos', JSON.stringify([...chronos, chronoInfos]))
     return newId;
   }
 
