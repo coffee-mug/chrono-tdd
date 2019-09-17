@@ -109,8 +109,7 @@ test('Click on pause stops the chrono', () => {
   assertChronosCount(1);
 
   // Saved in localStorage ? 
-  const savedChronos = localStorage.getItem('chronos') || "[]";
-  const parsedChronos = JSON.parse(savedChronos);
+  const parsedChronos = storedChronos();
   expect(parsedChronos[0].state.isPaused).toBe(true);
 
   assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 1)
@@ -140,8 +139,7 @@ test('when paused, clicking on restart starts the chrono again', () => {
 
   assertChronosCount(1);
 
-  let savedChronos = localStorage.getItem('chronos') || "[]";
-  let parsedChronos = JSON.parse(savedChronos);
+  let parsedChronos = storedChronos();
   expect(parsedChronos[0].state.isPaused).toBe(true);
 
   // Restarting
@@ -149,8 +147,7 @@ test('when paused, clicking on restart starts the chrono again', () => {
 
   assertChronosCount(1);
 
-  savedChronos = localStorage.getItem('chronos') || "[]";
-  parsedChronos = JSON.parse(savedChronos);
+  parsedChronos = storedChronos();
   expect(parsedChronos[0].state.isPaused).toBe(false);
 
   wait(1 * SECOND);
@@ -174,8 +171,7 @@ test('Click on reset button resets the chrono', () => {
 
   assertSecondsDisplayed(container.querySelector(CHRONO_COUNT), 0)
 
-  const savedChronos = localStorage.getItem('chronos') || "[]";
-  const parsedChronos = JSON.parse(savedChronos);
+  const parsedChronos = storedChronos();
 
   assertChronosCount(1)
   // 10ms approximation
@@ -303,26 +299,27 @@ test('Chrono starting times persists after unmount', () => {
 
   assertChronosCount(1);
 
-  expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeGreaterThanOrEqual(buttonAddedAt);
+  const parsedChronos = storedChronos();
+
+  expect(parsedChronos[0].state.started).toBeGreaterThanOrEqual(buttonAddedAt);
   // 10 ms aproximation
-  expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeLessThanOrEqual(buttonAddedAt + 10);
+  expect(parsedChronos[0].state.started).toBeLessThanOrEqual(buttonAddedAt + 10);
 
   // Should unmount the component, rerender the component
   // with the previous id and see if the time displayed is right.
   unmountComponentAtNode(container);
 
   assertChronosStoredCount(1)
-  expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeGreaterThanOrEqual(buttonAddedAt);
+  expect(parsedChronos[0].state.started).toBeGreaterThanOrEqual(buttonAddedAt);
   // 10 ms aproximation
-  expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeLessThanOrEqual(buttonAddedAt + 10);
+  expect(parsedChronos[0].state.started).toBeLessThanOrEqual(buttonAddedAt + 10);
 })
 
 test('Correctly render time elapsed from previously saved chronos', () => {
   const previousDate = Date.now() - 10 * SECOND;
 
   // Chrono saved from a previous navigation
-  const savedChronos = localStorage.getItem('chronos') || "[]";
-  const parsedChronos = JSON.parse(savedChronos);
+  const parsedChronos = storedChronos(); 
 
   parsedChronos.push({ id: '15609098089-98080808987', state: { isPaused: false, started: previousDate, label: '' }})
 
