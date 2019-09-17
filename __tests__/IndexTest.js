@@ -35,6 +35,30 @@ afterEach(() => {
 
 
 // Utils
+function assertSecondsDisplayed(domElement, elapsed) {
+    return expect(domElement.textContent).toEqual(elapsed + "s"); 
+}
+
+function assertChronosStoredCount(expectedCount) {
+  expect(JSON.parse(localStorage.getItem('chronos')).length).toEqual(expectedCount);
+}
+
+function assertChronoCountOnPage(expectedCount) {
+  const chronosOnPage = container.querySelectorAll(CHRONO_ITEM)
+
+  expect(chronosOnPage.length).toEqual(expectedCount);
+}
+
+function assertChronosCount(expectedCount) {
+  assertChronoCountOnPage(expectedCount)
+  assertChronosStoredCount(expectedCount)
+
+}
+
+function storedChronos() {
+  return JSON.parse(localStorage.getItem('chronos') || "[]");
+}
+
 function clickButton(btnSel) {
   const btn = container.querySelector(btnSel)
 
@@ -50,10 +74,6 @@ function wait(duration) {
   })
 }
 
-
-function assertSecondsDisplayed(domElement, elapsed) {
-    return expect(domElement.textContent).toEqual(elapsed + "s"); 
-}
 
 test('Display count of seconds elapsed correctly',() => {
     let timeElapsed = 0;
@@ -83,12 +103,10 @@ test('Click on pause stops the chrono', () => {
   clickButton(ADD_BUTTON)
 
   wait(1* SECOND)
-  console.log(localStorage.__STORE__)
 
   clickButton(PAUSE_BUTTON)
-  console.log(localStorage.__STORE__)
 
-  expect(Object.keys(localStorage.__STORE__).length).toBe(1);
+  assertChronosCount(1);
 
   // Saved in localStorage ? 
   const savedChronos = localStorage.getItem('chronos') || "[]";
@@ -120,17 +138,19 @@ test('when paused, clicking on restart starts the chrono again', () => {
   // Pausing the chrono after 1 second
   clickButton(PAUSE_BUTTON)
 
+  assertChronosCount(1);
+
   let savedChronos = localStorage.getItem('chronos') || "[]";
   let parsedChronos = JSON.parse(savedChronos);
-  expect(parsedChronos.length).toBe(1)
   expect(parsedChronos[0].state.isPaused).toBe(true);
 
   // Restarting
   clickButton(PAUSE_BUTTON)
 
+  assertChronosCount(1);
+
   savedChronos = localStorage.getItem('chronos') || "[]";
   parsedChronos = JSON.parse(savedChronos);
-  expect(parsedChronos.length).toBe(1)
   expect(parsedChronos[0].state.isPaused).toBe(false);
 
   wait(1 * SECOND);
@@ -157,8 +177,7 @@ test('Click on reset button resets the chrono', () => {
   const savedChronos = localStorage.getItem('chronos') || "[]";
   const parsedChronos = JSON.parse(savedChronos);
 
-  expect(parsedChronos.length).toBe(1)
-
+  assertChronosCount(1)
   // 10ms approximation
   expect(parsedChronos[0].state.started).toBeGreaterThanOrEqual(timestampOnReset - 10)
   expect(parsedChronos[0].state.started).toBeLessThanOrEqual(timestampOnReset + 10)
@@ -176,11 +195,7 @@ test('Can render a list of chronos', () => {
     render(<ChronoListComponent chronos={chronos}/>, container);
   })
 
-  // To refactor in its own assertChronoCount
-  expect(JSON.parse(localStorage.getItem('chronos')).length).toEqual(3);
-
-  // Displayed chronos
-  expect(container.querySelectorAll(CHRONO_ITEM).length).toEqual(3);
+  assertChronosCount(3)
 })
 
 test('Can add a chrono to the list by clicking the add button', () => {
@@ -189,13 +204,12 @@ test('Can add a chrono to the list by clicking the add button', () => {
   })
 
   // Empty list at startup
-  expect(container.querySelectorAll(CHRONO_ITEM).length).toEqual(0);
+  assertChronosCount(0)
 
   clickButton(ADD_BUTTON)
 
   // Saved to localStorage
-  expect(Object.keys(localStorage.__STORE__).length).toBe(1);
-  expect(container.querySelectorAll(CHRONO_ITEM).length).toEqual(1);
+  assertChronosCount(1)
 })
 
 test('Can remove a chrono from the list by clicking its remove button', () => {
@@ -224,13 +238,10 @@ test('Can remove a chrono from the list by clicking its remove button', () => {
   clickButton(REMOVE_SECOND_CHRONO_BUTTON)
   
   const chronosOnPage = container.querySelectorAll(CHRONO_ITEM);
-  expect(chronosOnPage.length).toEqual(2);
 
-  // also removed from localStorage
-  expect(JSON.parse(localStorage.getItem('chronos')).length).toEqual(2);
-  expect(chronosOnPage[0].querySelector(CHRONO_COUNT).textContent).toEqual("15s");
-  expect(chronosOnPage[1].querySelector(CHRONO_COUNT).textContent).toEqual("0s");
-
+  assertChronosCount(2);
+  assertSecondsDisplayed(chronosOnPage[0].querySelector(CHRONO_COUNT), 15)
+  assertSecondsDisplayed(chronosOnPage[1].querySelector(CHRONO_COUNT), 0)
 });
 
 test('Can create a chrono with a label', () => {
@@ -249,7 +260,8 @@ test('Can create a chrono with a label', () => {
 
   const chronosOnPage = container.querySelectorAll(CHRONO_ITEM)
 
-  expect(chronosOnPage.length).toEqual(1);
+  assertChronosCount(1)
+
   expect(chronosOnPage[0].querySelector(CHRONO_LABEL).textContent.trim()).not.toBeNull();
   expect(chronosOnPage[0].querySelector(CHRONO_LABEL).textContent.trim()).toEqual(labelField().value.trim());
 })
@@ -289,7 +301,8 @@ test('Chrono starting times persists after unmount', () => {
   const chrono = container.querySelector(CHRONO_ITEM);
   const chronoId = Object.keys(localStorage.__STORE__)[0];
 
-  expect(Object.keys(localStorage.__STORE__).length).toBe(1);
+  assertChronosCount(1);
+
   expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeGreaterThanOrEqual(buttonAddedAt);
   // 10 ms aproximation
   expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeLessThanOrEqual(buttonAddedAt + 10);
@@ -298,7 +311,7 @@ test('Chrono starting times persists after unmount', () => {
   // with the previous id and see if the time displayed is right.
   unmountComponentAtNode(container);
 
-  expect(Object.keys(localStorage.__STORE__).length).toBe(1);
+  assertChronosStoredCount(1)
   expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeGreaterThanOrEqual(buttonAddedAt);
   // 10 ms aproximation
   expect(JSON.parse(localStorage.getItem('chronos'))[0].state.started).toBeLessThanOrEqual(buttonAddedAt + 10);
@@ -324,5 +337,5 @@ test('Correctly render time elapsed from previously saved chronos', () => {
   wait(10 * SECOND)
 
   expect(chrono).not.toBe(null);
-  expect(chrono.querySelector(CHRONO_COUNT).textContent).toEqual("20s");
+  assertSecondsDisplayed(chrono.querySelector(CHRONO_COUNT), 20)
 })
